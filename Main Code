@@ -1,0 +1,95 @@
+spotify_data <- read.csv("/Users/add0sh/Documents/R practicals/Spotify - Coursework/Explore/Test/dataset.csv")
+
+# Normalisation function
+minMax <- function(x) {
+  (x - min(x)) / (max(x) - min(x))
+}
+# Applying normalisation to each column
+normalised <- lapply(cleaned_data, minMax) %>% as.data.frame()
+
+# Inspect the dataset
+str(spotify_data)
+summary(spotify_data)
+
+# Split the data into training and testing sets
+set.seed(123) # For reproducibility
+train_index <- createDataPartition(spotify_data$valence, p = 0.7, list = FALSE)
+train_data <- spotify_data[train_index, ]
+test_data <- spotify_data[-train_index, ]
+
+# Build the multiple linear regression model
+# Adjust the formula to include relevant features from your dataset
+linear_model <- lm(valence ~ danceability + energy + tempo + acousticness + speechiness, data = train_data)
+
+# Summarize the model
+summary(linear_model)
+
+# Predict on the test data
+predictions <- predict(linear_model, test_data)
+
+# Evaluate the model
+# Mean Squared Error (MSE)
+mse <- mean((test_data$valence - predictions)^2)
+print(paste("Mean Squared Error:", round(mse, 4)))
+
+# Mean Absolute Error (MAE)
+mae <- mean(abs(test_data$valence - predictions))
+print(paste("Mean Absolute Error:", round(mae, 4)))
+
+# R-squared on test data
+ss_total <- sum((test_data$valence - mean(test_data$valence))^2)
+ss_residual <- sum((test_data$valence - predictions)^2)
+r_squared <- 1 - (ss_residual / ss_total)
+print(paste("R-squared:", round(r_squared, 4)))
+
+# Visualize actual vs predicted valence
+ggplot(data = test_data, aes(x = valence, y = predictions)) +
+  geom_point(color = "royalblue") +
+  geom_abline(intercept = 0, slope = 1, color = "red", linetype = "dashed") +
+  labs(title = "Actual vs Predicted Valence",
+       x = "Actual Valence",
+       y = "Predicted Valence") +
+  theme_minimal()
+
+##############################################################################
+
+##### Correlation Plot ####
+
+audio_features <- c("danceability", "loudness", "speechiness", "acousticness","instrumentalness", "valence", "key", "liveness", "tempo", "energy", "tempo")
+
+audio_features_corr <- cor(normalised[, audio_features], use = "complete.obs")
+
+corrplot(
+  audio_features_corr,
+  is.corr = TRUE,
+  method = "color",
+  col = colorRampPalette(c("red", "white", "blue"))(200),
+  tl.col = "black",
+  tl.srt = 45,
+  title = "Correlations of audio features on valence",
+  cl.lim = c(-1, 1),
+  mar = c(0, 0, 2, 0)
+)
+
+##### Scatter Graphs ####
+
+ggplot() +
+  geom_point(data = detroit_techno_data, aes(x = valence, y = acousticness), 
+             color = "red3", alpha = 0.7) +
+  labs(
+    title = "Impact of acousticness on valence in Detroit Techno Music",
+    x = "Valence",
+    y = "Acousticness"
+  ) +
+  theme_minimal()
+
+
+ggplot() +
+  geom_point(data = detroit_techno_data, aes(x = valence, y = energy), 
+             color = "blue", alpha = 0.7) +
+  labs(
+    title = "Impact of energy on valence in Detroit Techno Music",
+    x = "Valence",
+    y = "Energy"
+  ) +
+  theme_minimal()
