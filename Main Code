@@ -11,6 +11,50 @@ normalised <- lapply(cleaned_data, minMax) %>% as.data.frame()
 str(spotify_data)
 summary(spotify_data)
 
+##### Scatter Graphs ####
+
+ggplot() +
+  geom_point(data = detroit_techno_data, aes(x = valence, y = acousticness), 
+             color = "red3", alpha = 0.7) +
+  labs(
+    title = "Impact of acousticness on valence in Detroit Techno Music",
+    x = "Valence",
+    y = "Acousticness"
+  ) +
+  theme_minimal()
+
+
+ggplot() +
+  geom_point(data = detroit_techno_data, aes(x = valence, y = energy), 
+             color = "blue", alpha = 0.7) +
+  labs(
+    title = "Impact of energy on valence in Detroit Techno Music",
+    x = "Valence",
+    y = "Energy"
+  ) +
+  theme_minimal()
+
+##### Correlation Plot ####
+
+audio_features <- c("danceability", "loudness", "speechiness", "acousticness","instrumentalness", "valence", "key", "liveness", "tempo", "energy")
+
+audio_features_corr <- cor(normalised[, audio_features], use = "complete.obs")
+
+corrplot(
+  audio_features_corr,
+  is.corr = TRUE,
+  method = "color",
+  col = colorRampPalette(c("red", "white", "blue"))(200),
+  tl.col = "black",
+  tl.srt = 45,
+  title = "Correlations of audio features on valence",
+  cl.lim = c(-1, 1),
+  mar = c(0, 0, 2, 0)
+)
+
+
+#### Multiple Linear Regression Construction ####
+
 # Split the data into training and testing sets
 set.seed(123) # For reproducibility
 train_index <- createDataPartition(spotify_data$valence, p = 0.7, list = FALSE)
@@ -53,43 +97,4 @@ ggplot(data = test_data, aes(x = valence, y = predictions)) +
 
 ##############################################################################
 
-##### Correlation Plot ####
 
-audio_features <- c("danceability", "loudness", "speechiness", "acousticness","instrumentalness", "valence", "key", "liveness", "tempo", "energy", "tempo")
-
-audio_features_corr <- cor(normalised[, audio_features], use = "complete.obs")
-
-corrplot(
-  audio_features_corr,
-  is.corr = TRUE,
-  method = "color",
-  col = colorRampPalette(c("red", "white", "blue"))(200),
-  tl.col = "black",
-  tl.srt = 45,
-  title = "Correlations of audio features on valence",
-  cl.lim = c(-1, 1),
-  mar = c(0, 0, 2, 0)
-)
-
-##### Scatter Graphs ####
-
-ggplot() +
-  geom_point(data = detroit_techno_data, aes(x = valence, y = acousticness), 
-             color = "red3", alpha = 0.7) +
-  labs(
-    title = "Impact of acousticness on valence in Detroit Techno Music",
-    x = "Valence",
-    y = "Acousticness"
-  ) +
-  theme_minimal()
-
-
-ggplot() +
-  geom_point(data = detroit_techno_data, aes(x = valence, y = energy), 
-             color = "blue", alpha = 0.7) +
-  labs(
-    title = "Impact of energy on valence in Detroit Techno Music",
-    x = "Valence",
-    y = "Energy"
-  ) +
-  theme_minimal()
